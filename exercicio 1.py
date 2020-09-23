@@ -1,0 +1,162 @@
+import numpy as np
+import matplotlib.pyplot as plt 
+from skimage import data
+from PIL import Image
+import math 
+
+image = data.astronaut()
+image2 = data.brick()
+
+def convert_to_gray(image, luma=False):
+    # http://poynton.ca/PDFs/ColorFAQ.pdf
+    image_r = image[:,:,0]
+    image_g = image[:,:,1]
+    image_b = image[:,:,2]
+ 
+    if luma:
+        params = [0.299, 0.589, 0.114]
+    else:
+        params = [0.2125, 0.7154, 0.0721]
+
+    gray_image = np.ceil(np.dot(image[...,:3], params))
+    gray_image[gray_image > 255] = 255
+    
+    return gray_image
+
+# x = np.ceil((image_r + image_g + image_b) / 3)
+
+image = convert_to_gray(image)
+plt.imshow(image, cmap='gray')
+
+def generate_gradient(image, horizontal=True):
+    pixel_progress = image.shape[0] // 256
+    
+    count = 0 
+    pixel_value = 0 
+    
+    for i in range(image.shape[0]):
+        if (count / pixel_progress).is_integer():
+            pass
+        else:
+            pixel_value += 1
+            
+        if horizontal:
+            image[:,count] = pixel_value
+        else:
+            image[count] = pixel_value
+        count += 1    
+    
+    return image
+
+def check_if_is_normalized(image):
+    assert np.max(image) <= 255.0
+    assert np.min(image) >= 0.0
+
+
+def sum_matrix(*args):    
+    summed_image = np.zeros((args[0].shape[0], args[0].shape[1]))
+    count = 0
+    
+    for i in range(len(args) - 1):
+        summed_image += (args[count] + args[count + 1])
+        count += 1
+       
+    norm_img = np.ceil(summed_image / len(args))
+                     
+    check_if_is_normalized(norm_img)
+    return norm_img
+    
+horiz_gradient = generate_gradient(image2)
+plt.imshow(horiz_gradient, cmap='gray')
+           
+new_image = sum_matrix(image, horiz_gradient)
+plt.imshow(new_image, cmap='gray')
+
+vert_gradient = generate_gradient(image2, False)      
+plt.imshow(vert_gradient, cmap='gray')
+
+new_image2 = sum_matrix(image, vert_gradient)
+plt.imshow(new_image2, cmap='gray')
+
+combined_image = sum_matrix(image, vert_gradient, horiz_gradient) 
+plt.imshow(combined_image, cmap='gray')
+
+def rotate_image(image, radius=0.2):
+    new_image = np.zeros((image.shape[0], image.shape[1]))
+   
+    for row in range(image.shape[0]):
+        for column in range(image.shape[1]):   
+            x = row * math.cos(radius) - column * math.sin(radius)
+            y = row * math.sin(radius) + column * math.cos(radius) 
+            
+            try:
+                if int(x) < 0 or int(y) < 0:
+                    raise Exception
+                new_image[row][column] = image[int(x)][int(y)]
+            except:
+                new_image[row][column] = 0
+
+    return new_image
+
+def scale_image(image, scale_factor=0.5):
+    new_image = np.zeros((image.shape[0], image.shape[1]))
+   
+    for row in range(image.shape[0]):
+        for column in range(image.shape[1]):   
+            x = row * scale_factor
+            y = column * scale_factor
+            
+            try:
+                if int(x) < 0 or int(y) < 0:
+                    raise Exception
+                new_image[row][column] = image[int(x)][int(y)]
+            except:
+                new_image[row][column] = 0
+
+    return new_image
+
+
+rotated_img = scale_image(image, 0.5)
+plt.imshow(rotated_img, cmap='gray')
+
+
+def translate_image(image, dx=52.5, dy=32.3):
+    new_image = np.zeros((image.shape[0], image.shape[1]))
+   
+    for row in range(image.shape[0]):
+        for column in range(image.shape[1]):   
+            x = row - dx
+            y = column - dy
+            
+            try:
+                if int(x) < 0 or int(y) < 0:
+                    raise Exception
+                new_image[row][column] = image[int(x)][int(y)]
+            except:
+                new_image[row][column] = 0
+
+    return new_image
+
+
+translated_img = translate_image(image, 50, 100)
+plt.imshow(translated_img, cmap='gray')
+        
+def shear_image(image, shear_v=0.3, shear_h=0):
+    new_image = np.zeros((image.shape[0], image.shape[1]))
+   
+    for row in range(image.shape[0]):
+        for column in range(image.shape[1]):   
+            x =  row + (column * shear_v)
+            y = (row * shear_h) + column
+            try:
+                if int(x) < 0 or int(y) < 0:
+                    raise Exception
+                new_image[row][column] = image[int(x)][int(y)]
+            except:
+                new_image[row][column] = 0
+
+    return new_image
+
+
+shear_img = shear_image(image, 0.25, 0.1)
+plt.imshow(shear_img, cmap='gray')
