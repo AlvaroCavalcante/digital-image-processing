@@ -6,6 +6,7 @@ import math
 
 image = data.astronaut()
 image2 = data.brick()
+image3 = data.brick()
 
 def convert_to_gray(image, luma=False):
     # http://poynton.ca/PDFs/ColorFAQ.pdf
@@ -48,23 +49,25 @@ def generate_gradient(image, horizontal=True):
     
     return image
 
-def check_if_is_normalized(image):
-    assert np.max(image) <= 255.0
-    assert np.min(image) >= 0.0
+def normalize_image(image):
+    image[image > 255] = 255
+    image[image < 0] = 0
+    return image
 
 
 def sum_matrix(*args):    
-    summed_image = np.zeros((args[0].shape[0], args[0].shape[1]))
     count = 0
     
     for i in range(len(args) - 1):
-        summed_image += (args[count] + args[count + 1])
+        if count == 0:
+            summed_image = (args[count] + args[count + 1])
+        else:
+            summed_image += args[count + 1]
         count += 1
        
-    norm_img = np.ceil(summed_image / len(args))
-                     
-    check_if_is_normalized(norm_img)
-    return norm_img
+    norm_img = np.ceil(summed_image / len(args))         
+    
+    return normalize_image(norm_img)
     
 horiz_gradient = generate_gradient(image2)
 plt.imshow(horiz_gradient, cmap='gray')
@@ -72,14 +75,20 @@ plt.imshow(horiz_gradient, cmap='gray')
 new_image = sum_matrix(image, horiz_gradient)
 plt.imshow(new_image, cmap='gray')
 
-vert_gradient = generate_gradient(image2, False)      
+vert_gradient = generate_gradient(image3, False)      
 plt.imshow(vert_gradient, cmap='gray')
 
 new_image2 = sum_matrix(image, vert_gradient)
 plt.imshow(new_image2, cmap='gray')
 
-combined_image = sum_matrix(image, vert_gradient, horiz_gradient) 
+combined_image = sum_matrix(image, horiz_gradient, vert_gradient) 
 plt.imshow(combined_image, cmap='gray')
+
+
+diff_degrade = horiz_gradient - vert_gradient
+plt.imshow(diff_degrade, cmap='gray')
+
+
 
 def rotate_image(image, radius=0.2):
     new_image = np.zeros((image.shape[0], image.shape[1]))
