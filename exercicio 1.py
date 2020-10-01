@@ -1,10 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt 
 from skimage import data
-from PIL import Image
+# from PIL import Image
 import math 
 
-image = data.astronaut()
+image = data.coffee()
 image2 = data.brick()
 image3 = data.brick()
 
@@ -107,6 +107,9 @@ def rotate_image(image, radius=0.2):
 
     return new_image
 
+rotated_img = rotate_image(image)
+plt.imshow(rotated_img, cmap='gray')
+
 def scale_image(image, scale_factor=0.5):
     new_image = np.zeros((image.shape[0], image.shape[1]))
    
@@ -148,7 +151,18 @@ def translate_image(image, dx=52.5, dy=32.3):
 
 
 translated_img = translate_image(image, 50, 100)
+
+translated_img2 = translate_image(image, 50, 100)
+
+from matplotlib.pyplot import figure
+
+figure(num=None, figsize=(8, 6), dpi=80, facecolor='w', edgecolor='k')
+fig = figure(num=None, figsize=(8, 6), dpi=80, facecolor='w', edgecolor='k')
+ax1 = fig.add_subplot(2,2,1)
 plt.imshow(translated_img, cmap='gray')
+ax2 = fig.add_subplot(2,2,2)
+plt.imshow(translated_img2, cmap='gray')
+
         
 def shear_image(image, shear_v=0.3, shear_h=0):
     new_image = np.zeros((image.shape[0], image.shape[1]))
@@ -167,5 +181,5 @@ def shear_image(image, shear_v=0.3, shear_h=0):
     return new_image
 
 
-shear_img = shear_image(image, 0.25, 0.1)
+shear_img = shear_image(image)
 plt.imshow(shear_img, cmap='gray')
