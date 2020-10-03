@@ -28,20 +28,20 @@ def binarize_img(img, threshold):
 bin_image = binarize_img(image.copy(), 50)
 plt.imshow(bin_image, vmin=0, vmax=1, cmap='gray')
 
+def normalize_img(img):
+    img /= np.max(img)
+    img = np.ceil(img * 255)  
+    return img
+
 def exponential_trans(img):
     for row in range(img.shape[0]):
         for column in range(img.shape[1]):
             img[row][column] = np.exp(img[row][column])
             
-    return img
+    return normalize_img(img)
 
-exp_image = exponential_trans(image.copy())
-plt.imshow(exp_image)
-
-def normalize_img(img):
-    img /= np.max(img)
-    img = np.ceil(img * 255)  
-    return img
+# exp_image = exponential_trans(image.copy())
+# plt.imshow(exp_image, cmap='gray')
 
 def potential_trans(img, gamma):
     for row in range(img.shape[0]):
@@ -73,3 +73,18 @@ def sqrt_trans(img):
 
 sqrt_image = sqrt_trans(image.copy())
 plt.imshow(sqrt_image)
+
+def step_transform(img, threshold):
+    for row in range(img.shape[0]):
+        for column in range(img.shape[1]):
+            if img[row][column] < threshold:
+               img[row][column] = math.exp(img[row][column])
+            else:
+                img[row][column] = math.log(img[row][column], 2)
+            
+    return normalize_img(img)
+
+step_image = step_transform(image.copy(), 128)
+plt.imshow(step_image, cmap='gray')
+
+
