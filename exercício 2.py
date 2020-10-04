@@ -36,11 +36,12 @@ def normalize_img(img):
 def exponential_trans(img):
     for row in range(img.shape[0]):
         for column in range(img.shape[1]):
-            img[row][column] = np.exp(img[row][column])
+            img[row][column] = math.exp(img[row][column])
             
-    return normalize_img(img)
+    return img
 
-# exp_image = exponential_trans(image.copy())
+image_teste = data.text().astype(float)
+exp_image = exponential_trans(image_teste.copy())
 # plt.imshow(exp_image, cmap='gray')
 
 def potential_trans(img, gamma):
