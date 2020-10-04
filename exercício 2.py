@@ -51,18 +51,17 @@ def potential_trans(img, gamma):
 
     return normalize_img(img)
 
-pot_image = potential_trans(image.copy(), 0.2)
+
+image2 = data.coins()
+pot_image = potential_trans(image2.copy(), 0.2)
 plt.imshow(pot_image, cmap='gray')
 
 def log_trans(img):
     for row in range(img.shape[0]):
         for column in range(img.shape[1]):
-            img[row][column] = math.log(img[row][column], 2)
+            img[row][column] = math.log((1 + img[row][column]), 10)
             
-    return img
-
-log_image = log_trans(image.copy())
-plt.imshow(log_image)
+    return normalize_img(img)
 
 def sqrt_trans(img):
     for row in range(img.shape[0]):
