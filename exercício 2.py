@@ -42,7 +42,7 @@ def exponential_trans(img):
 
 image_teste = data.text().astype(float)
 exp_image = exponential_trans(image_teste.copy())
-# plt.imshow(exp_image, cmap='gray')
+plt.imshow(exp_image, cmap='gray')
 
 def potential_trans(img, gamma):
     for row in range(img.shape[0]):

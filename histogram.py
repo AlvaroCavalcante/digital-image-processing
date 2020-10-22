@@ -2,6 +2,9 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import data
+import cv2
+
+# image = cv2.imread('/home/alvaro/Área de Trabalho/profissao black.jpg')
 
 image = data.coffee()
 
@@ -19,6 +22,8 @@ def convert_to_gray(image, luma=False):
 image = convert_to_gray(image)
 plt.imshow(image, cmap='gray')
 
+image[image > 210] = 0
+cv2.imwrite('/home/alvaro/Área de Trabalho/loss2.jpg', image)
 
 def instantiate_histogram():    
     hist_array= []
