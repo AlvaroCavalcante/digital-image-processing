@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from keras.preprocessing import image
 import os
-from keras.preprocessing import image
 from skimage import data
 
 image = data.coffee()
@@ -21,13 +19,28 @@ def convert_to_gray(image, luma=False):
 image = convert_to_gray(image)
 plt.imshow(image, cmap='gray')
 
+def get_img_with_padding(image, kernel):
+    hor_stack = 0
+    while ((kernel.shape[0] - 1) - hor_stack) != 0: 
+        image = np.insert(image, 0, 0, axis=0)
+        image = np.vstack([image, np.zeros(image.shape[1])])
+        hor_stack += 1
+        
+    vert_stack = 0
+    while ((kernel.shape[0] - 1) - vert_stack) != 0: 
+        image = np.insert(image, 0, 0, axis=1)
+        image = np.hstack([image, np.zeros((image.shape[0], 1))])
+        vert_stack += 1
+        
+    return image
+
 def convolution(image, kernel, stride, padding = False):
     initial_line = 0
     final_line = kernel.shape[0]
     new_image = []
 
     if padding:
-        image = get_img_with_padding(image) # segundo livro preenchimento abaixo= m - 1 e coluna esquerda e direita de n - 1
+        image = get_img_with_padding(image, kernel)
     
     while final_line <= image.shape[0]:    
         initial_column = 0
@@ -50,9 +63,35 @@ def convolution(image, kernel, stride, padding = False):
 
 kernel_sharpen = np.array([[0, -1, 0], [-1,5,-1], [0,-1,0]]) 
 kernel_outline = np.array([[-1, -1, -1], [-1,8,-1], [-1,-1,-1]])
+mean = np.full((5,5), 0.11111111111)
 
-# image = image.load_img(path + filepath, target_size=size)
+median = np.zeros((5,5))
+median[2,2] = 1
 
-conv_image = convolution(image, kernel_outline, 1)
+conv_image = convolution(image, mean, 1, True)
 
-plt.imshow(conv_image, cmap='gray')
+noise = np.random.normal(loc=50, scale=30, size=image.shape)
+
+noise_img = image + noise
+
+plt.imshow(noise_img, cmap='gray')
+
+plt.imshow(out, cmap='gray')
+
+row,col = image.shape
+s_vs_p = 0.5
+amount = 0.1
+out = np.copy(image)
+
+num_salt = np.ceil(amount * image.size * s_vs_p)
+coords = [np.random.randint(0, i - 1, int(num_salt))
+        for i in image.shape]
+out[coords] = 255
+
+num_pepper = np.ceil(amount* image.size * (1. - s_vs_p))
+coords = [np.random.randint(0, i - 1, int(num_pepper))
+        for i in image.shape]
+out[coords] = 0
+
+
+gaussian = np.array([[1,4,6,4,1], [4,16,24,16,4], [6,24, 36, 24, 6], [4,16,24,16,4], [1,4,6,4,1]])
