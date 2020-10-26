@@ -34,7 +34,13 @@ def get_img_with_padding(image, kernel):
         
     return image
 
-def convolution(image, kernel, stride, padding = False):
+def apply_median_kernel(kernel_area):
+    flatten_kernel = kernel_area.flatten()
+    sorted_kernel = sorted(flatten_kernel)
+    median_index = len(flatten_kernel) // 2
+    return sorted_kernel[median_index]
+
+def convolution(image, kernel, stride, function=False ,padding=False):
     initial_line = 0
     final_line = kernel.shape[0]
     new_image = []
@@ -49,8 +55,11 @@ def convolution(image, kernel, stride, padding = False):
 
         while final_column <= image.shape[1]:
             kernel_area = image[initial_line:final_line, initial_column:final_column]
-                                    
-            matrix_line.append(np.sum(kernel * kernel_area))
+            
+            if function:
+                matrix_line.append(function(kernel_area))
+            else:                   
+                matrix_line.append(np.sum(kernel * kernel_area))
         
             initial_column += stride 
             final_column += stride
@@ -66,9 +75,8 @@ kernel_outline = np.array([[-1, -1, -1], [-1,8,-1], [-1,-1,-1]])
 mean = np.full((5,5), 0.11111111111)
 
 median = np.zeros((5,5))
-median[2,2] = 1
 
-conv_image = convolution(image, mean, 1, True)
+conv_image = convolution(image, median, 1, apply_median_kernel)
 
 noise = np.random.normal(loc=50, scale=30, size=image.shape)
 
@@ -76,7 +84,7 @@ noise_img = image + noise
 
 plt.imshow(noise_img, cmap='gray')
 
-plt.imshow(out, cmap='gray')
+plt.imshow(conv_image, cmap='gray')
 
 row,col = image.shape
 s_vs_p = 0.5
