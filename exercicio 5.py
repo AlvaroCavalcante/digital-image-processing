@@ -43,6 +43,19 @@ def erode_img(coords, img):
 
     return eroded_img
 
+def openning_img(coords, img):
+    eroded = erode_img(coords, img)
+    coords = map_coordinates(eroded)
+
+    opened = dilate_img(coords, eroded)
+    return opened
+
+def closing_img(coords, img):
+    opened = dilate_img(coords, img)
+    coords = map_coordinates(opened)
+    eroded = erode_img(coords, opened)
+
+    return eroded
 
 kernel_element = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
                   (1,0), (1,1), (1,2), (1,3), (1,4), (1,5),
@@ -54,13 +67,25 @@ coords = map_coordinates(img)
 dilated_img = dilate_img(coords, img)
 eroded_img = erode_img(coords, img)
 
+open_img = openning_img(coords, img)
+close_img = closing_img(coords, img)
+
+
 plt.imshow(dilated_img, cmap='gray')
 plt.imshow(eroded_img, cmap='gray')
+plt.imshow(open_img, cmap='gray')
+plt.imshow(close_img, cmap='gray')
+
 
 kernel = np.ones((5,5),np.uint8)
 erosion = cv2.erode(img,kernel,iterations = 1)
 dilation = cv2.dilate(img,kernel,iterations = 1)
+opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
 
 plt.imshow(erosion, cmap='gray')
 plt.imshow(dilation, cmap='gray')
+plt.imshow(opening, cmap='gray')
+plt.imshow(closing, cmap='gray')
+
 
