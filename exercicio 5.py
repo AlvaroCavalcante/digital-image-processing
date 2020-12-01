@@ -107,11 +107,12 @@ def get_cv_skeleton(coords, img):
 
     return skel
 
-# kernel_element = get_kernel(8,8)
-kernel_element  = np.array([[0,1,0], [1,1,1], [0,1,0]]).astype('uint8')
+kernel_element = get_kernel(8,8)
+# kernel_element  = np.array([[0,1,0], [1,1,1], [0,1,0]]).astype('uint8')
 
 coords = map_coordinates(img)
 
+"""
 skeleton = get_skeleton(coords, img)
  
 dilated_img = dilate_img(coords, img)
@@ -121,7 +122,6 @@ open_img = openning_img(coords, img)
 close_img = closing_img(coords, img)
 
 border = border_extraction(coords, img)
-
 
 plt.imshow(dilated_img, cmap='gray')
 plt.imshow(eroded_img, cmap='gray')
@@ -141,5 +141,107 @@ plt.imshow(dilation, cmap='gray')
 plt.imshow(opening, cmap='gray')
 plt.imshow(closing, cmap='gray')
 
+""" 
 
-coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins.png', cv2.IMREAD_GRAYSCALE)
+coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins 2.png', cv2.IMREAD_GRAYSCALE)
+plt.imshow(coin_img, cmap='gray')
+
+def binarize_img(img, threshold):
+    img[img < threshold] = 0
+    img[img >= threshold] = 1
+    return img
+
+# ret2,th2 = cv2.threshold(coin_img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+bin_coin = binarize_img(coin_img.copy(), 200) * -1 # 100
+plt.imshow(bin_coin, cmap='gray')
+
+coords = map_coordinates(bin_coin)
+
+final_img = dilate_img(coords, bin_coin)
+
+final_img = closing_img(coords, bin_coin)
+plt.imshow(final_img, cmap='gray')
+
+
+for i in range(16):
+    coords = map_coordinates(final_img)
+    final_img = erode_img(coords, final_img)
+
+def is_border(img, l, c):
+    border = [img[l + 1][c], img[l + -1][c],
+              img[l][c + 1], img[l][c - 1]]
+    
+    if 0 not in border:
+        return False
+    return True
+
+def pad_perimeter(img, first_line, first_col, last_line, last_col, figure_n):
+    for l in range(last_line - first_line):
+        for c in range(last_col - first_col):
+            if img[first_line + l][first_col + c] == 1:
+                img[first_line + l][first_col + c] = figure_n
+    
+def get_figure_perimeter(img, fig_area, figure_n):
+    first_line = 9999
+    last_line = 0
+    first_col = 9999
+    last_col = 0
+    
+    for i in range(len(fig_area)):
+        first_line = fig_area[i][0] if fig_area[i][0] < first_line else first_line
+        last_line = fig_area[i][0] if fig_area[i][0] > last_line else last_line
+        first_col = fig_area[i][1] if fig_area[i][1] < first_col else first_col
+        last_col = fig_area[i][1] if fig_area[i][1] > last_col else last_col
+        
+    return pad_perimeter(img, first_line, first_col, last_line, last_col, figure_n)
+
+    
+def get_figure_border(img, l, c, figure_n, fig_area):
+    fig_area.append((l,c))
+    if img[l][c+1] == 1 and is_border(img, l, c+1):
+        img[l][c+1] = figure_n
+        get_figure_border(img, l, c+1, figure_n, fig_area)
+    elif img[l][c-1] == 1 and is_border(img, l, c-1):
+        img[l][c-1] = figure_n
+        get_figure_border(img, l, c-1, figure_n, fig_area)
+    elif img[l+1][c] == 1 and is_border(img, l+1, c):
+        img[l+1][c] = figure_n
+        get_figure_border(img, l+1, c, figure_n, fig_area)
+    elif img[l-1][c] == 1 and is_border(img, l-1, c):
+        img[l-1][c] = figure_n
+        get_figure_border(img, l-1, c, figure_n, fig_area)
+    elif img[l+1][c-1] == 1 and is_border(img, l+1, c-1):
+        img[l+1][c-1] = figure_n
+        get_figure_border(img, l+1, c-1, figure_n, fig_area)
+    elif img[l-1][c-1] == 1 and is_border(img, l-1, c-1):
+        img[l-1][c-1] = figure_n
+        get_figure_border(img, l-1, c-1, figure_n, fig_area)
+    elif img[l-1][c+1] == 1 and is_border(img, l-1, c+1):
+        img[l-1][c+1] = figure_n
+        get_figure_border(img, l-1, c+1, figure_n, fig_area)
+    elif img[l+1][c+1] == 1 and is_border(img, l+1, c+1):
+        img[l+1][c+1] = figure_n
+        get_figure_border(img, l+1, c+1, figure_n, fig_area)
+
+    return get_figure_perimeter(img, fig_area, figure_n)
+
+def get_borders():
+    for l in range(final_img.shape[0]):
+        for c in range(final_img.shape[1]):
+            if final_img[l][c] == 1 and is_border(final_img, l, c):
+                final_img[l][c] = 165
+
+figures = 10
+for l in range(final_img.shape[0]):
+    for c in range(final_img.shape[1]):
+        if final_img[l][c] == 1:
+            figures+= 10
+            final_img[l][c] = figures
+            get_figure_border(final_img, l, c, figures, [])
+
+
+unique_values = np.unique(final_img)
+number_figures = len(unique_values) - 1
+            
+plt.imshow(final_img, cmap='gray')
