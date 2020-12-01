@@ -57,3 +57,10 @@ eroded_img = erode_img(coords, img)
 plt.imshow(dilated_img, cmap='gray')
 plt.imshow(eroded_img, cmap='gray')
 
+kernel = np.ones((5,5),np.uint8)
+erosion = cv2.erode(img,kernel,iterations = 1)
+dilation = cv2.dilate(img,kernel,iterations = 1)
+
+plt.imshow(erosion, cmap='gray')
+plt.imshow(dilation, cmap='gray')
+
