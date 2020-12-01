@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt 
 
-img = np.array(Image.open('/home/alvaro/Downloads/original/elephant-14.gif'))
+img = np.array(Image.open('/home/alvaro/Downloads/original/bat-8.gif'))
 
 plt.imshow(img, cmap='gray')
 
@@ -71,10 +71,37 @@ def get_kernel(width, heigth):
             
     return kernel
 
-kernel_element = get_kernel(11,11)
+def get_number_of_iterations(coords, img):
+    n = 0
+    skel = np.zeros(img.shape, np.uint8)
+    results = []
+    # while sum(sum(img)) != 0:
+    while n != 25:
+        opened = openning_img(coords, img)
+        result = img - opened
+        eroded = erode_img(coords, img)
+        
+        skel = cv2.bitwise_or(skel,result)
+        results.append(skel)
+        img = eroded.copy()
+        coords = map_coordinates(img)
+        n += 1
 
+    return results
 
+def get_skeleton(coords, img):
+    opened = openning_img(coords, img)
+    result1 = img - opened
+    
+    coords = map_coordinates(opened)
+    eroded = erode_img(coords, opened)
+    return result1
+    
+kernel_element = get_kernel(8,8)
 coords = map_coordinates(img)
+
+n = get_number_of_iterations(coords, img)
+
 dilated_img = dilate_img(coords, img)
 eroded_img = erode_img(coords, img)
 
@@ -83,12 +110,15 @@ close_img = closing_img(coords, img)
 
 border = border_extraction(coords, img)
 
+skeleton = get_skeleton(coords, img) 
+
+
 plt.imshow(dilated_img, cmap='gray')
 plt.imshow(eroded_img, cmap='gray')
 plt.imshow(open_img, cmap='gray')
 plt.imshow(close_img, cmap='gray')
 plt.imshow(border, cmap='gray')
-
+plt.imshow(skeleton, cmap='gray')
 
 kernel = np.ones((5,5),np.uint8)
 erosion = cv2.erode(img,kernel,iterations = 1)
@@ -102,3 +132,4 @@ plt.imshow(opening, cmap='gray')
 plt.imshow(closing, cmap='gray')
 
 
+coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins.png', cv2.IMREAD_GRAYSCALE)
