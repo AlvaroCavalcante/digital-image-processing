@@ -71,37 +71,49 @@ def get_kernel(width, heigth):
             
     return kernel
 
-def get_number_of_iterations(coords, img):
+def get_skeleton(coords, img):
     n = 0
     skel = np.zeros(img.shape, np.uint8)
     results = []
-    # while sum(sum(img)) != 0:
-    while n != 25:
+
+    while n != 350:
         opened = openning_img(coords, img)
         result = img - opened
         eroded = erode_img(coords, img)
         
         skel = cv2.bitwise_or(skel,result)
-        results.append(skel)
+        # results.append(skel)
         img = eroded.copy()
         coords = map_coordinates(img)
         n += 1
 
-    return results
+    return skel
 
-def get_skeleton(coords, img):
-    opened = openning_img(coords, img)
-    result1 = img - opened
-    
-    coords = map_coordinates(opened)
-    eroded = erode_img(coords, opened)
-    return result1
-    
-kernel_element = get_kernel(8,8)
+def get_cv_skeleton(coords, img):
+    skel = np.zeros(img.shape, np.uint8)
+
+    element = np.array([[0,1,0], [1,1,1], [0,1,0]]).astype('uint8')
+    n = 0
+    while True:
+        open = cv2.morphologyEx(img, cv2.MORPH_OPEN, element)
+        temp = cv2.subtract(img, open)
+        eroded = cv2.erode(img, element)
+        skel = cv2.bitwise_or(skel,temp)
+        img = eroded.copy()
+        n+= 1
+        print('iterations', n)
+        if cv2.countNonZero(img)==0:
+            break
+
+    return skel
+
+# kernel_element = get_kernel(8,8)
+kernel_element  = np.array([[0,1,0], [1,1,1], [0,1,0]]).astype('uint8')
+
 coords = map_coordinates(img)
 
-n = get_number_of_iterations(coords, img)
-
+skeleton = get_skeleton(coords, img)
+ 
 dilated_img = dilate_img(coords, img)
 eroded_img = erode_img(coords, img)
 
@@ -109,8 +121,6 @@ open_img = openning_img(coords, img)
 close_img = closing_img(coords, img)
 
 border = border_extraction(coords, img)
-
-skeleton = get_skeleton(coords, img) 
 
 
 plt.imshow(dilated_img, cmap='gray')
