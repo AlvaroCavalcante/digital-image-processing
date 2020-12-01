@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt 
 
-img = np.array(Image.open('/home/alvaro/Downloads/original/horseshoe-6.gif'))
+img = np.array(Image.open('/home/alvaro/Downloads/original/jar-16.gif'))
 
 plt.imshow(img, cmap='gray')
 
@@ -30,9 +30,30 @@ def dilate_img(coords, img):
 
     return dilated_img
 
-kernel_element = [(0,0), (0,1), (0,2)]
+def erode_img(coords, img):
+    eroded_img = img.copy()
+    try:
+        for coord in coords:
+            for element in kernel_element:
+                if img[coord[0] + element[0]][coord[1] + element[1]] != 1:
+                    eroded_img[coord[0]][coord[1]] = 0    
+                    break
+    except:
+        pass
+
+    return eroded_img
+
+
+kernel_element = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
+                  (1,0), (1,1), (1,2), (1,3), (1,4), (1,5),
+                  (2,0), (2,1), (2,2), (2,3), (2,4), (2,5),
+                  (3,0), (3,1), (3,2), (3,3), (3,4), (3,5),
+                  (4,0), (4,1), (4,2), (4,3), (4,4), (4,5)]
 
 coords = map_coordinates(img)
 dilated_img = dilate_img(coords, img)
+eroded_img = erode_img(coords, img)
 
 plt.imshow(dilated_img, cmap='gray')
+plt.imshow(eroded_img, cmap='gray')
+
