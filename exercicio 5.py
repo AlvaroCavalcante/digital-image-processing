@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt 
 
-img = np.array(Image.open('/home/alvaro/Downloads/original/bat-8.gif'))
+img = np.array(Image.open('/home/alvaro/Downloads/original/butterfly-1.gif'))
 
 plt.imshow(img, cmap='gray')
 
@@ -20,13 +20,11 @@ def map_coordinates(img):
 
 def dilate_img(coords, img):
     dilated_img = img.copy()
-    try:
-        for coord in coords:
-            for element in kernel_element:
+    for coord in coords:
+        for element in kernel_element:
+            if coord[0] + element[0] < img.shape[0] and coord[1] + element[1] < img.shape[1]:
                 if img[coord[0] + element[0]][coord[1] + element[1]] != 1:
                     dilated_img[coord[0] + element[0]][coord[1] + element[1]] = 1    
-    except:
-        pass
 
     return dilated_img
 
@@ -69,7 +67,7 @@ def get_kernel(width, heigth):
         for w in range(width):
             kernel.append((h,w))
             
-    return kernel
+    return np.array(kernel)
 
 def get_skeleton(coords, img):
     n = 0
@@ -107,10 +105,12 @@ def get_cv_skeleton(coords, img):
 
     return skel
 
-kernel_element = get_kernel(8,8)
+kernel_element = get_kernel(11,11)
 # kernel_element  = np.array([[0,1,0], [1,1,1], [0,1,0]]).astype('uint8')
 
 coords = map_coordinates(img)
+dilated_img = dilate_img(coords, img)
+
 
 """
 skeleton = get_skeleton(coords, img)
@@ -147,21 +147,28 @@ coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins 2.png', cv2.IM
 plt.imshow(coin_img, cmap='gray')
 
 def binarize_img(img, threshold):
-    img[img < threshold] = 0
-    img[img >= threshold] = 1
+    img[img < threshold] = 1
+    img[img >= threshold] = 0
     return img
 
 # ret2,th2 = cv2.threshold(coin_img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-bin_coin = binarize_img(coin_img.copy(), 200) * -1 # 100
+bin_coin = binarize_img(coin_img.copy(), 200) # 100
 plt.imshow(bin_coin, cmap='gray')
+
 
 coords = map_coordinates(bin_coin)
 
-final_img = dilate_img(coords, bin_coin)
+border = border_extraction(coords, bin_coin)
 
-final_img = closing_img(coords, bin_coin)
-plt.imshow(final_img, cmap='gray')
+kernel = np.ones((5,5),np.uint8)
+erosion = cv2.erode(bin_coin,kernel,iterations = 1)
+dilation = cv2.dilate(bin_coin,kernel,iterations = 1)
+opening = cv2.morphologyEx(bin_coin, cv2.MORPH_OPEN, kernel)
+closing = cv2.morphologyEx(bin_coin, cv2.MORPH_CLOSE, kernel)
+
+
+plt.imshow(border, cmap='gray')
 
 
 for i in range(16):
