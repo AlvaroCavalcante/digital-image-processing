@@ -139,8 +139,18 @@ plt.imshow(closing, cmap='gray')
 
 """ 
 
-coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins.png', cv2.IMREAD_GRAYSCALE)
-plt.imshow(coin_img, cmap='gray')
+coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins 2.png', cv2.IMREAD_GRAYSCALE)
+
+image_blur = cv2.blur(coin_img,(5,5))
+
+
+laplacian = cv2.Laplacian(image_blur,cv2.CV_64F)
+sobelx = cv2.Sobel(dst,cv2.CV_64F,1,0,ksize=3)  # x
+sobely = cv2.Sobel(dst,cv2.CV_64F,0,1,ksize=3)  # y
+
+plt.imshow(image_blur, cmap='gray')
+plt.imshow(sobelx, cmap='gray')
+plt.imshow(sobely, cmap='gray')
 
 def binarize_img(img, threshold):
     img[img < threshold] = 1
@@ -149,8 +159,15 @@ def binarize_img(img, threshold):
 
 kernel_element = get_kernel(5,5)
 
-bin_coin = 1 - binarize_img(coin_img.copy(), 100) # 100
+contours, hierarchy = cv2.findContours(bin_coin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+cont = cv2.drawContours(image_blur, contours, -1, (0,255,0), 3)
+
+bin_coin = 1 - binarize_img(sobely.copy(), 180) # 100
 plt.imshow(bin_coin, cmap='gray')
+
+dst = cv2.medianBlur(coin_img, 5)
+plt.imshow(dst, cmap='gray')
+
 
 coords = map_coordinates(bin_coin)
 
@@ -159,14 +176,18 @@ coords = map_coordinates(final_img)
 
 plt.imshow(final_img, cmap='gray')
 
-kernel = np.ones((5,5),np.uint8)
-erosion = cv2.erode(erosion,kernel,iterations = 1)
+kernel = np.ones((3,3),np.uint8)
+erosion = cv2.erode(bin_coin,kernel,iterations = 2)
 dilation = cv2.dilate(bin_coin,kernel,iterations = 1)
-opening = cv2.morphologyEx(bin_coin, cv2.MORPH_OPEN, kernel)
-closing = cv2.morphologyEx(bin_coin, cv2.MORPH_CLOSE, kernel)
+opening = cv2.morphologyEx(bin_coin, cv2.MORPH_OPEN, kernel,iterations = 1)
+closing = cv2.morphologyEx(bin_coin, cv2.MORPH_CLOSE, kernel,iterations = 1)
 
+plt.imshow(dilation, cmap='gray')
 plt.imshow(erosion, cmap='gray')
+plt.imshow(opening, cmap='gray')
+plt.imshow(closing, cmap='gray')
 
+final_img = erosion
 
 for i in range(1):
     coords = map_coordinates(final_img)
