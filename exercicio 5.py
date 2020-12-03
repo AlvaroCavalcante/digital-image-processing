@@ -140,15 +140,19 @@ plt.imshow(closing, cmap='gray')
 """ 
 
 coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins 2.png', cv2.IMREAD_GRAYSCALE)
+plt.imshow(coin_img, cmap='gray')
 
-image_blur = cv2.blur(coin_img,(5,5))
+gray_correct = np.array(255 * (coin_img / 255) ** 1.3 , dtype='uint8')
+image_blur = cv2.blur(gray_correct,(7,7))
 
 
 laplacian = cv2.Laplacian(image_blur,cv2.CV_64F)
-sobelx = cv2.Sobel(dst,cv2.CV_64F,1,0,ksize=3)  # x
-sobely = cv2.Sobel(dst,cv2.CV_64F,0,1,ksize=3)  # y
+sobelx = cv2.Sobel(gray_correct,cv2.CV_64F,1,0,ksize=3)  # x
+sobely = cv2.Sobel(image_blur,cv2.CV_64F,0,1,ksize=3)  # y
 
 plt.imshow(image_blur, cmap='gray')
+plt.imshow(gray_correct, cmap='gray')
+
 plt.imshow(sobelx, cmap='gray')
 plt.imshow(sobely, cmap='gray')
 
@@ -159,15 +163,8 @@ def binarize_img(img, threshold):
 
 kernel_element = get_kernel(5,5)
 
-contours, hierarchy = cv2.findContours(bin_coin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-cont = cv2.drawContours(image_blur, contours, -1, (0,255,0), 3)
-
-bin_coin = 1 - binarize_img(sobely.copy(), 180) # 100
+bin_coin = 1 - binarize_img(sobely.copy(), 150) # 100
 plt.imshow(bin_coin, cmap='gray')
-
-dst = cv2.medianBlur(coin_img, 5)
-plt.imshow(dst, cmap='gray')
-
 
 coords = map_coordinates(bin_coin)
 
@@ -177,7 +174,7 @@ coords = map_coordinates(final_img)
 plt.imshow(final_img, cmap='gray')
 
 kernel = np.ones((3,3),np.uint8)
-erosion = cv2.erode(bin_coin,kernel,iterations = 2)
+erosion = cv2.erode(bin_coin,kernel,iterations = 1)
 dilation = cv2.dilate(bin_coin,kernel,iterations = 1)
 opening = cv2.morphologyEx(bin_coin, cv2.MORPH_OPEN, kernel,iterations = 1)
 closing = cv2.morphologyEx(bin_coin, cv2.MORPH_CLOSE, kernel,iterations = 1)
@@ -187,7 +184,7 @@ plt.imshow(erosion, cmap='gray')
 plt.imshow(opening, cmap='gray')
 plt.imshow(closing, cmap='gray')
 
-final_img = erosion
+final_img = opening
 
 for i in range(1):
     coords = map_coordinates(final_img)
@@ -259,6 +256,21 @@ def get_borders():
         for c in range(final_img.shape[1]):
             if final_img[l][c] == 1 and is_border(final_img, l, c):
                 final_img[l][c] = 165
+
+
+ret, labels = cv2.connectedComponents(final_img.astype('uint8'))
+label_hue = np.uint8(179 * labels / np.max(labels))
+blank_ch = 255 * np.ones_like(label_hue)
+labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
+labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_HSV2BGR)
+labeled_img[label_hue == 0] = 0
+
+plt.subplot(222)
+plt.title('Objects counted:'+ str(ret-1))
+plt.imshow(labeled_img)
+print('objects number is:', ret-1)
+plt.show()
+
 
 figures = 10
 for l in range(final_img.shape[0]):
