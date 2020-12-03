@@ -30,15 +30,13 @@ def dilate_img(coords, img):
 
 def erode_img(coords, img):
     eroded_img = img.copy()
-    try:
-        for coord in coords:
-            for element in kernel_element:
+    for coord in coords:
+        for element in kernel_element:
+            if coord[0] + element[0] < img.shape[0] and coord[1] + element[1] < img.shape[1]:
                 if img[coord[0] + element[0]][coord[1] + element[1]] != 1:
                     eroded_img[coord[0]][coord[1]] = 0    
                     break
-    except:
-        pass
-
+                
     return eroded_img
 
 def openning_img(coords, img):
@@ -72,15 +70,13 @@ def get_kernel(width, heigth):
 def get_skeleton(coords, img):
     n = 0
     skel = np.zeros(img.shape, np.uint8)
-    results = []
 
-    while n != 350:
+    while n != 50:
         opened = openning_img(coords, img)
         result = img - opened
         eroded = erode_img(coords, img)
         
         skel = cv2.bitwise_or(skel,result)
-        # results.append(skel)
         img = eroded.copy()
         coords = map_coordinates(img)
         n += 1
@@ -109,11 +105,11 @@ kernel_element = get_kernel(11,11)
 # kernel_element  = np.array([[0,1,0], [1,1,1], [0,1,0]]).astype('uint8')
 
 coords = map_coordinates(img)
-dilated_img = dilate_img(coords, img)
+# skeleton = get_skeleton(coords, img)
 
 
 """
-skeleton = get_skeleton(coords, img)
+skeleton = get_cv_skeleton(coords, img)
  
 dilated_img = dilate_img(coords, img)
 eroded_img = erode_img(coords, img)
@@ -143,7 +139,7 @@ plt.imshow(closing, cmap='gray')
 
 """ 
 
-coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins 2.png', cv2.IMREAD_GRAYSCALE)
+coin_img = cv2.imread('/home/alvaro/Documentos/mestrado/PDI/coins.png', cv2.IMREAD_GRAYSCALE)
 plt.imshow(coin_img, cmap='gray')
 
 def binarize_img(img, threshold):
@@ -151,29 +147,33 @@ def binarize_img(img, threshold):
     img[img >= threshold] = 0
     return img
 
-# ret2,th2 = cv2.threshold(coin_img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+kernel_element = get_kernel(5,5)
 
-bin_coin = binarize_img(coin_img.copy(), 200) # 100
+bin_coin = 1 - binarize_img(coin_img.copy(), 100) # 100
 plt.imshow(bin_coin, cmap='gray')
-
 
 coords = map_coordinates(bin_coin)
 
-border = border_extraction(coords, bin_coin)
+final_img = dilate_img(coords, bin_coin)
+coords = map_coordinates(final_img)
+
+plt.imshow(final_img, cmap='gray')
 
 kernel = np.ones((5,5),np.uint8)
-erosion = cv2.erode(bin_coin,kernel,iterations = 1)
+erosion = cv2.erode(erosion,kernel,iterations = 1)
 dilation = cv2.dilate(bin_coin,kernel,iterations = 1)
 opening = cv2.morphologyEx(bin_coin, cv2.MORPH_OPEN, kernel)
 closing = cv2.morphologyEx(bin_coin, cv2.MORPH_CLOSE, kernel)
 
+plt.imshow(erosion, cmap='gray')
 
-plt.imshow(border, cmap='gray')
 
-
-for i in range(16):
+for i in range(1):
     coords = map_coordinates(final_img)
     final_img = erode_img(coords, final_img)
+
+plt.imshow(final_img, cmap='gray')
+
 
 def is_border(img, l, c):
     border = [img[l + 1][c], img[l + -1][c],
@@ -249,6 +249,6 @@ for l in range(final_img.shape[0]):
 
 
 unique_values = np.unique(final_img)
-number_figures = len(unique_values) - 1
+print(len(unique_values) - 1)
             
 plt.imshow(final_img, cmap='gray')
